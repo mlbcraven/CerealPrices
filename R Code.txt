@@ -1,0 +1,160 @@
+> table <- read.csv("C:/Users/john/Desktop/rice_wheat_corn_prices.csv")
+>   View(table)
+> yearly_price <- table %>% filter(Year != 2022) %>% group_by(Year) %>% summarise_at(vars('Price_wheat_ton_infl','Price_rice_ton_infl','Price_corn_ton_infl'),mean)
+> cereal_category <- yearly_price %>% pivot_longer(2:4, names_to = 'cereal')
+> plot(cereal_category$Year,cereal_category$value,type = "b", xlab = "Year", ylab = "value")
+> model_W_R <- lm(yearly_price$Price_wheat_ton_infl~yearly_price$Price_rice_ton_infl)
+> model_W_C <- lm(yearly_price$Price_wheat_ton_infl~yearly_price$Price_corn_ton_infl)
+> summary(model_W_C)
+
+Call:
+lm(formula = yearly_price$Price_wheat_ton_infl ~ yearly_price$Price_corn_ton_infl)
+
+Residuals:
+    Min      1Q  Median      3Q     Max 
+-37.013 -17.590   0.197  15.170  56.451 
+
+Coefficients:
+                                 Estimate Std. Error t value Pr(>|t|)    
+(Intercept)                      62.03784   15.43584   4.019 0.000399 ***
+yearly_price$Price_corn_ton_infl  0.89350    0.07381  12.105 1.21e-12 ***
+---
+Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1
+
+Residual standard error: 23.06 on 28 degrees of freedom
+Multiple R-squared:  0.8396,	Adjusted R-squared:  0.8338 
+F-statistic: 146.5 on 1 and 28 DF,  p-value: 1.212e-12
+
+> View(yearly_price)
+> high_wheat_price <- yearly_price[yearly_price$Price_wheat_ton_infl >= 300, c(1,2,3,4)]
+> View(high_wheat_price)
+> W_c_predict = 62.0378 + 0.8935*400 
+> W_c_predict
+[1] 419.4378
+> summary(model_W_R)
+
+Call:
+lm(formula = yearly_price$Price_wheat_ton_infl ~ yearly_price$Price_rice_ton_infl)
+
+Residuals:
+    Min      1Q  Median      3Q     Max 
+-84.266 -19.786   0.216  22.377  83.173 
+
+Coefficients:
+                                 Estimate Std. Error t value Pr(>|t|)    
+(Intercept)                      80.03355   27.40824   2.920  0.00684 ** 
+yearly_price$Price_rice_ton_infl  0.34121    0.05595   6.098 1.41e-06 ***
+---
+Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1
+
+Residual standard error: 37.73 on 28 degrees of freedom
+Multiple R-squared:  0.5705,	Adjusted R-squared:  0.5551 
+F-statistic: 37.19 on 1 and 28 DF,  p-value: 1.406e-06
+
+> W_R_predict = 80.0335 + 0.3412*800
+> W_R_predict
+[1] 352.9935
+
+> cereal_category <- yearly_price %>% pivot_longer(2:4, names_to = 'cereal')
+> plot(cereal_category$Year,cereal_category$value, type = "b", xlab = "Year", ylab = "Value")
+> yearly_price %>% select(Year, Price_wheat_ton_infl, Price_rice_ton_infl,Price_corn_ton_infl) %>% slice_min(yearly_price$Price_wheat_ton_infl)
+# A tibble: 1 x 4
+   Year Price_wheat_ton_infl Price_rice_ton_infl Price_corn_ton_infl
+  <int>                <dbl>               <dbl>               <dbl>
+1  2000                 153.                313.                137.
+> yearly_price %>% select(Year, Price_wheat_ton_infl, Price_rice_ton_infl,Price_corn_ton_infl) %>% slice_max(yearly_price$Price_wheat_ton_infl)
+# A tibble: 1 x 4
+   Year Price_wheat_ton_infl Price_rice_ton_infl Price_corn_ton_infl
+  <int>                <dbl>               <dbl>               <dbl>
+1  2012                 342.                652.                346.
+
+> tree_model3 <- rpart(Cereal_Prices$Price_wheat_ton_infl ~ Cereal_Prices$Price_rice_ton_infl + Cereal_Prices$Price_corn_ton_infl, data = Cereal_Prices, method = "anova")
+> fancyRpartPlot(tree_model3)
+
+summary(tree_model3)
+Call:
+rpart(formula = Cereal_Prices$Price_wheat_ton_infl ~ Cereal_Prices$Price_rice_ton_infl + 
+    Cereal_Prices$Price_corn_ton_infl, data = Cereal_Prices, 
+    method = "anova")
+  n=359 (1 observation deleted due to missingness)
+
+          CP nsplit rel error    xerror       xstd
+1 0.55424612      0 1.0000000 1.0099700 0.09383690
+2 0.10438221      1 0.4457539 0.4814262 0.05540166
+3 0.05467795      2 0.3413717 0.3670201 0.04882133
+4 0.01373040      3 0.2866937 0.3256629 0.04762545
+5 0.01331658      4 0.2729633 0.3457665 0.05131604
+6 0.01000000      5 0.2596467 0.3355026 0.04910603
+
+Variable importance
+Cereal_Prices$Price_corn_ton_infl Cereal_Prices$Price_rice_ton_infl 
+                               67                                33 
+
+Node number 1: 359 observations,    complexity param=0.5542461
+  mean=241.7268, MSE=4243.66 
+  left son=2 (243 obs) right son=3 (116 obs)
+  Primary splits:
+      Cereal_Prices$Price_corn_ton_infl < 204.44  to the left,  improve=0.5542461, (0 missing)
+      Cereal_Prices$Price_rice_ton_infl < 537.88  to the left,  improve=0.3228517, (0 missing)
+  Surrogate splits:
+      Cereal_Prices$Price_rice_ton_infl < 544.02  to the left,  agree=0.836, adj=0.491, (0 split)
+
+Node number 2: 243 observations,    complexity param=0.1043822
+  mean=208.2188, MSE=1280.882 
+  left son=4 (118 obs) right son=5 (125 obs)
+  Primary splits:
+      Cereal_Prices$Price_corn_ton_infl < 170.165 to the left,  improve=0.5109119, (0 missing)
+      Cereal_Prices$Price_rice_ton_infl < 417.185 to the left,  improve=0.3048682, (0 missing)
+  Surrogate splits:
+      Cereal_Prices$Price_rice_ton_infl < 417.185 to the left,  agree=0.794, adj=0.576, (0 split)
+
+Node number 3: 116 observations,    complexity param=0.05467795
+  mean=311.9201, MSE=3171.035 
+  left son=6 (40 obs) right son=7 (76 obs)
+  Primary splits:
+      Cereal_Prices$Price_corn_ton_infl < 229.35  to the left,  improve=0.22645830, (0 missing)
+      Cereal_Prices$Price_rice_ton_infl < 415.855 to the left,  improve=0.09072804, (0 missing)
+  Surrogate splits:
+      Cereal_Prices$Price_rice_ton_infl < 536.97  to the left,  agree=0.707, adj=0.15, (0 split)
+
+Node number 4: 118 observations,    complexity param=0.0137304
+  mean=181.8894, MSE=565.9736 
+  left son=8 (72 obs) right son=9 (46 obs)
+  Primary splits:
+      Cereal_Prices$Price_corn_ton_infl < 150.865 to the left,  improve=0.31321320, (0 missing)
+      Cereal_Prices$Price_rice_ton_infl < 266.175 to the left,  improve=0.07107038, (0 missing)
+  Surrogate splits:
+      Cereal_Prices$Price_rice_ton_infl < 407.23  to the left,  agree=0.805, adj=0.5, (0 split)
+
+Node number 5: 125 observations
+  mean=233.0738, MSE=683.5676 
+
+Node number 6: 40 observations
+  mean=274.9822, MSE=2280.773 
+
+Node number 7: 76 observations,    complexity param=0.01331658
+  mean=331.3611, MSE=2543.535 
+  left son=14 (21 obs) right son=15 (55 obs)
+  Primary splits:
+      Cereal_Prices$Price_rice_ton_infl < 552.37  to the left,  improve=0.1049485, (0 missing)
+      Cereal_Prices$Price_corn_ton_infl < 356.675 to the left,  improve=0.1038119, (0 missing)
+  Surrogate splits:
+      Cereal_Prices$Price_corn_ton_infl < 264.785 to the left,  agree=0.882, adj=0.571, (0 split)
+
+Node number 8: 72 observations
+  mean=171.2472, MSE=351.0781 
+
+Node number 9: 46 observations
+  mean=198.5467, MSE=447.5946 
+
+Node number 14: 21 observations
+  mean=304.92, MSE=2373.488 
+
+Node number 15: 55 observations
+  mean=341.4567, MSE=2239.599 
+> boxplot(yearly_price$Price_wheat_ton_infl, ylab = "Wheat value")
+> summary(yearly_price$Price_wheat_ton_infl)
+> boxplot(yearly_price$Price_rice_ton_infl,ylab="Rice Value")
+> summary(yearly_price$Price_rice_ton_infl)
+> boxplot(yearly_price$Price_corn_ton_infl,ylab="Corn Value")
+
